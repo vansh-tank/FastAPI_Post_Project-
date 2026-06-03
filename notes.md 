@@ -1,0 +1,42 @@
+decorator is used to convert it into fast api node otherwise it is plain python method 
+'/' is the root else any it must be put in decorator 
+async key word is used only when some taks that takes time is used for it to be non blocking
+for example api calls or database opertaions 
+
+--reload is only set in dev not in production 
+
+when path is same first match wins 
+
+json is used for sending or taking data 
+
+GET is for client to retrive data from server 
+POST is to create Something on server so client send data 
+DELETE self explanatory 
+
+@app.get('/posts/orm', status_code=status.HTTP_200_OK)
+def get_posts_orm(db: session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return {'posts': posts}
+
+def get_db():
+    db = session()
+    try:
+        yield db
+    finally: 
+        db.close()
+
+this is a example of depenency injection we can just use object but this way helps in testing 
+
+Ideally we also have schemas.py where we define our pydantic model only
+where we define a base pydantic class and extend other classes for specefic tasks 
+also these specefic helps validate sepcific apis that responses specefic data only 
+like if we only want to update pyblished field we only need a pydntic class with only published field pydantic object 
+our sql models are in database.py which also give me connection, cursor, session ect objects 
+also for db dependency injection 
+
+pydantic object are for response data validation 
+sql declarative_base is for orm validation, and constraint 
+
+
+if sqlalchemy sees a table exits it wont alter it as it is not ment for thst 
+a data migration tool like alembic is used for such taska

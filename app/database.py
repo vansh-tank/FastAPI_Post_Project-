@@ -26,11 +26,11 @@ for _ in range(5):
         db_pool = pooling.MySQLConnectionPool(
             pool_name="mypool",
             pool_size=10,
-            host="localhost",
-            user="root",
-            password="vanshtank",
-            database="FastAPI",
-            port=3306
+            host=settings.database_hostname,
+            user=settings.database_username,
+            password=settings.database_password,
+            database=settings.database_name,
+            port=int(settings.database_port)
         )
         print('MySQL Connection Pool created successfully')
         break

@@ -10,6 +10,7 @@ engine = create_engine(
 
 session = sessionmaker(bind=engine)
 base = declarative_base()
+Base = base
 
 
 def get_db():

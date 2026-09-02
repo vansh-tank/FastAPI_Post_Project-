@@ -21,6 +21,9 @@
 | 10 | [10_ALEMBIC_MIGRATIONS.md](./10_ALEMBIC_MIGRATIONS.md) | Database migrations — Alembic explained simply |
 | 11 | [11_SQL_LEARN.md](./11_SQL_LEARN.md) | Raw SQL vs ORM — the learning experiments in `SQL_learn/` |
 | 12 | [12_KEY_CONCEPTS_GLOSSARY.md](./12_KEY_CONCEPTS_GLOSSARY.md) | Quick-reference glossary of every concept used |
+| 13 | [13_DOCKER_AND_COMPOSE.md](./13_DOCKER_AND_COMPOSE.md) | Containerization with Docker & Docker Compose |
+| 14 | [14_TESTING_PYTEST.md](./14_TESTING_PYTEST.md) | Automated testing with Pytest, fixtures, TestClient & isolated DB |
+| 15 | [15_CI_CD_GITHUB_ACTIONS.md](./15_CI_CD_GITHUB_ACTIONS.md) | CI/CD with GitHub Actions, MySQL services, Docker build/push, & deploy |
 
 ---
 
@@ -61,6 +64,7 @@ Client (Browser / Postman)
 | **bcrypt** | Hashes passwords so they're never stored in plain text |
 | **pydantic-settings** | Loads config from `.env` files |
 | **Uvicorn** | ASGI server that actually *runs* FastAPI |
+| **Docker & Compose** | Containerization and multi-service orchestration |
 
 ---
 

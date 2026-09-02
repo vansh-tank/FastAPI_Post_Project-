@@ -1,0 +1,39 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Testing & Linting
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Project notes & learning materials
+NOTES/
+SQL_learn/
+notes.md 
+
+# Environment secrets and local databases
+.env
+app/.env
+*.db
+mydb.db
+
+# IDE & OS files
+.DS_Store
+.idea/
+.vscode/

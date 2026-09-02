@@ -29,12 +29,11 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DATABASE_NAME }}
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -p${{ secrets.DATABASE_PASSWORD }}"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -proot"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -59,22 +58,23 @@ jobs:
         run: |
           python -c "
           import pymysql
-          host = '127.0.0.1' if '${{ secrets.DATABASE_HOSTNAME }}' in ['localhost', ''] else '${{ secrets.DATABASE_HOSTNAME }}'
           conn = pymysql.connect(
-              host=host,
-              port=int('${{ secrets.DATABASE_PORT }}'),
+              host='127.0.0.1',
+              port=3306,
               user='root',
-              password='${{ secrets.DATABASE_PASSWORD }}'
+              password='root'
           )
           cur = conn.cursor()
           cur.execute('CREATE DATABASE IF NOT EXISTS \`${{ secrets.DATABASE_NAME }}\`;')
           cur.execute('CREATE DATABASE IF NOT EXISTS \`${{ secrets.DATABASE_NAME }}_test\`;')
+          cur.execute(\"ALTER USER 'root'@'%' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
+          cur.execute(\"ALTER USER 'root'@'localhost' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
           if '${{ secrets.DATABASE_USERNAME }}' != 'root':
               cur.execute(\"CREATE USER IF NOT EXISTS '${{ secrets.DATABASE_USERNAME }}'@'%' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
               cur.execute(\"GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DATABASE_USERNAME }}'@'%';\")
-              cur.execute(\"FLUSH PRIVILEGES;\")
+          cur.execute(\"FLUSH PRIVILEGES;\")
           conn.close()
-          print('Databases initialized successfully!')
+          print('Databases and credentials initialized successfully!')
           "
 
       - name: Run pytest test suite

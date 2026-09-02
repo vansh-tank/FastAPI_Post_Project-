@@ -145,20 +145,23 @@ GitHub allows you to run **Service Containers** alongside the runner:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DATABASE_NAME }}
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -p${{ secrets.DATABASE_PASSWORD }}"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -proot"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 ```
 
 ### Critical Details You Must Know:
-1. **`MYSQL_ROOT_PASSWORD` is mandatory:** In MySQL 8, the official container will crash immediately if `MYSQL_ROOT_PASSWORD` is omitted.
-2. **`--health-cmd`:** Steps will not run until the MySQL service responds `mysqld is alive`. The runner tests health every 10 seconds up to 5 times.
+1. **The `secrets` Context is NOT Allowed in `services:`**
+   - In GitHub Actions, the `services:` block is parsed **before** the job's environment secrets are evaluated. If you write `${{ secrets.DATABASE_PASSWORD }}` inside `services:`, GitHub Actions throws:
+     `Unrecognized named-value: 'secrets'`.
+   - **The Solution:** Start the ephemeral test service with a default static password (`root`), and in the very first step (`Ensure test database and users exist`), update the credentials and databases using your environment secrets!
+2. **`MYSQL_ROOT_PASSWORD` is mandatory:** In MySQL 8, the official container will crash immediately if `MYSQL_ROOT_PASSWORD` is omitted.
+3. **`--health-cmd`:** Steps will not run until the MySQL service responds `mysqld is alive`. The runner tests health every 10 seconds up to 5 times.
 3. **The `localhost` vs `127.0.0.1` Linux Trap:**
    - On Linux (which `ubuntu-latest` runs), if an application connects to `localhost`, the MySQL client tries to open a Unix socket file at `/tmp/mysql.sock` (which fails because the container is running over TCP).
    - Connecting to `127.0.0.1` forces TCP/IP over port `3306`.
@@ -389,12 +392,11 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DATABASE_NAME }}
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -p${{ secrets.DATABASE_PASSWORD }}"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -proot"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -419,22 +421,23 @@ jobs:
         run: |
           python -c "
           import pymysql
-          host = '127.0.0.1' if '${{ secrets.DATABASE_HOSTNAME }}' in ['localhost', ''] else '${{ secrets.DATABASE_HOSTNAME }}'
           conn = pymysql.connect(
-              host=host,
-              port=int('${{ secrets.DATABASE_PORT }}'),
+              host='127.0.0.1',
+              port=3306,
               user='root',
-              password='${{ secrets.DATABASE_PASSWORD }}'
+              password='root'
           )
           cur = conn.cursor()
           cur.execute('CREATE DATABASE IF NOT EXISTS \`${{ secrets.DATABASE_NAME }}\`;')
           cur.execute('CREATE DATABASE IF NOT EXISTS \`${{ secrets.DATABASE_NAME }}_test\`;')
+          cur.execute(\"ALTER USER 'root'@'%' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
+          cur.execute(\"ALTER USER 'root'@'localhost' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
           if '${{ secrets.DATABASE_USERNAME }}' != 'root':
               cur.execute(\"CREATE USER IF NOT EXISTS '${{ secrets.DATABASE_USERNAME }}'@'%' IDENTIFIED BY '${{ secrets.DATABASE_PASSWORD }}';\")
               cur.execute(\"GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DATABASE_USERNAME }}'@'%';\")
-              cur.execute(\"FLUSH PRIVILEGES;\")
+          cur.execute(\"FLUSH PRIVILEGES;\")
           conn.close()
-          print('Databases initialized successfully!')
+          print('Databases and credentials initialized successfully!')
           "
 
       - name: Run pytest test suite
